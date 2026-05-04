@@ -22,14 +22,14 @@ def upgrade() -> None:
     op.execute("""
         CREATE TABLE user_statuses (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            status VARCHAR NOT NULL
+            status VARCHAR UNIQUE NOT NULL
         );
     """)
 
     op.execute("""
         CREATE TABLE event_categories (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-            category VARCHAR NOT NULL
+            category VARCHAR UNIQUE NOT NULL
         );
     """)
     op.execute("""
