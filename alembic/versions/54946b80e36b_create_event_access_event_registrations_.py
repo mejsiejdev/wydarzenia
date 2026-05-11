@@ -47,6 +47,7 @@ def upgrade() -> None:
         );
     """)
 
+
     op.execute("""
         CREATE TABLE event_occurrences (
             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
