@@ -64,7 +64,7 @@ def upgrade() -> None:
             user_id UUID NOT NULL,
             status registration_status NOT NULL,
             registered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (occurrence_id, user_id)
+            PRIMARY KEY (occurrence_id, user_id)
         );
     """)
 
