@@ -5,6 +5,7 @@ Revises: f98dc76a8f5f
 Create Date: 2026-05-03 15:17:47.671120
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -44,6 +45,7 @@ def upgrade() -> None:
             extra_info TEXT
         );
     """)
+
 
 def downgrade() -> None:
     op.execute("DROP TABLE location_addresses;")
