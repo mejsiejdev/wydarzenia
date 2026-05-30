@@ -28,10 +28,26 @@ Next, set the DATABASE_URL in `.env` that points to your database.
 DATABASE_URL=postgresql://user:password@localhost:5432/database_name
 ```
 
-Now, you can run the project.
+Before running, apply the database migrations (see [Migrations](#migrations)):
 
 ```bash
-uv run main.py
+uv run alembic upgrade head
+```
+
+Now you can run the project with uvicorn. For local development, use
+`--reload` for live reloading:
+
+```bash
+uv run uvicorn main:app --reload
+```
+
+The API is served at `http://127.0.0.1:8000`, with interactive docs at
+`http://127.0.0.1:8000/docs`.
+
+For a production-like server, drop `--reload`:
+
+```bash
+uv run uvicorn main:app
 ```
 
 If you want to add a package, run:

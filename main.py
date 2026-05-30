@@ -1,6 +1,8 @@
-def main():
-    print("Hello from wydarzenia!")
+from fastapi import FastAPI
 
+from config import settings
+from routers import users
 
-if __name__ == "__main__":
-    main()
+app = FastAPI(title=settings.app_name)
+
+app.include_router(users.router)
