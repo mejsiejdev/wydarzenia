@@ -5,23 +5,29 @@ Revises: e14278d0fc39
 Create Date: 2026-05-11 16:27:06.325730
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '54946b80e36b'
-down_revision: Union[str, Sequence[str], None] = 'e14278d0fc39'
+revision: str = "54946b80e36b"
+down_revision: Union[str, Sequence[str], None] = "e14278d0fc39"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE TYPE event_status AS ENUM ('szkic', 'oczukujace_na_akceptacje', 'zaakceptowane', 'odrzucone');")
-    op.execute("CREATE TYPE occurrence_status AS ENUM ('zaplanowane', 'odwolane', 'przesuniete');")
-    op.execute("CREATE TYPE registration_status AS ENUM ('organizator', 'zapisany', 'rezerwowy', 'anulowany');")
+    op.execute(
+        "CREATE TYPE event_status AS ENUM ('szkic', 'oczukujace_na_akceptacje', 'zaakceptowane', 'odrzucone');"
+    )
+    op.execute(
+        "CREATE TYPE occurrence_status AS ENUM ('zaplanowane', 'odwolane', 'przesuniete');"
+    )
+    op.execute(
+        "CREATE TYPE registration_status AS ENUM ('organizator', 'zapisany', 'rezerwowy', 'anulowany');"
+    )
 
     op.execute("""
         CREATE TABLE events (
@@ -67,6 +73,7 @@ def upgrade() -> None:
             PRIMARY KEY (occurrence_id, user_id)
         );
     """)
+
 
 def downgrade() -> None:
     op.execute("DROP TABLE event_registrations;")

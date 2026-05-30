@@ -5,15 +5,15 @@ Revises: 7b0ee76b8025
 Create Date: 2026-05-25 01:05:51.775424
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '12cfef333c14'
-down_revision: Union[str, Sequence[str], None] = '7b0ee76b8025'
+revision: str = "12cfef333c14"
+down_revision: Union[str, Sequence[str], None] = "7b0ee76b8025"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -50,14 +50,15 @@ def upgrade() -> None:
         );
     """)
 
+
 def downgrade() -> None:
     op.execute("DROP TABLE room_availabilities;")
     op.execute("DROP TABLE locations;")
-    
+
     # Cofnięcie modyfikacji z ALTER TABLE
     op.execute("""
         ALTER TABLE location_addresses 
         ALTER COLUMN country DROP DEFAULT;
     """)
-    
+
     op.execute("DROP TYPE location_type;")
