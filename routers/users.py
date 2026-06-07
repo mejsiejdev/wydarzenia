@@ -47,3 +47,15 @@ def get_user(user_id: uuid.UUID, db=Depends(get_db)):
             detail="User not found.",
         )
     return user
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(user_id: uuid.UUID, db=Depends(get_db)):
+    db.execute("DELETE FROM users WHERE id = %s RETURNING id;", (str(user_id),))
+    deleted = db.fetchone()
+    
+    if deleted is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+    return
