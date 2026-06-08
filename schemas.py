@@ -21,3 +21,10 @@ class UserRead(BaseModel):
     blacklisted: bool
     created_at: datetime
     updated_at: datetime
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr | None = None
+    password: str | None = Field(default=None, min_length=8, max_length=72)
+    first_name: str | None = Field(default=None, min_length=1)
+    last_name: str | None = Field(default=None, min_length=1)

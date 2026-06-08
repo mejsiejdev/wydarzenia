@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from psycopg2 import errors
 
 from dependencies import get_db
-from schemas import UserCreate, UserRead
+from schemas import UserCreate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -60,3 +60,52 @@ def delete_user(user_id: uuid.UUID, db=Depends(get_db)):
             detail="User not found.",
         )
     return
+
+
+@router.patch("/{user_id}", response_model=UserRead)
+def update_user(user_id: uuid.UUID, payload: UserUpdate, db=Depends(get_db)):
+    # Odrzucamy wszystkie pola, które nie zostały wprost przesłane przez użytkownika
+    update_data = payload.model_dump(exclude_unset=True)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No valid fields provided for update.",
+        )
+
+    # Należy na nowo zahaszować hasło, jeśli zostało przesłane do zmiany
+    if "password" in update_data:
+        hashed = bcrypt.hashpw(
+            update_data["password"].encode(), bcrypt.gensalt()
+        ).decode()
+        update_data["password"] = hashed
+
+    # Dynamiczne budowanie zapytania SQL na podstawie przesłanych pól
+    set_clauses = []
+    values = []
+
+    for key, value in update_data.items():
+        set_clauses.append(f"{key} = %s")
+        values.append(value)
+
+    set_clauses.append("updated_at = NOW()")
+    values.append(str(user_id))
+
+    query = f"UPDATE users SET {', '.join(set_clauses)} WHERE id = %s RETURNING *;"
+
+    try:
+        db.execute(query, tuple(values))
+    except errors.UniqueViolation:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="User with this email already exists.",
+        )
+
+    updated_user = db.fetchone()
+    if updated_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+
+    return updated_user
