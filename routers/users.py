@@ -4,10 +4,23 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from psycopg2 import errors
 
-from dependencies import get_db
+from dependencies import get_current_user, get_db, require_moderator
 from schemas import UserCreate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+# Pola, które na cudzym koncie może zmieniać wyłącznie moderator
+MODERATOR_ONLY_FIELDS = {"status", "blacklisted"}
+
+
+def ensure_self_or_moderator(current_user, user_id: uuid.UUID) -> None:
+    if current_user["status"] != "moderator" and str(current_user["id"]) != str(
+        user_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not allowed to access this user.",
+        )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=UserRead)
@@ -31,14 +44,17 @@ def create_user(payload: UserCreate, db=Depends(get_db)):
 
 
 @router.get("", response_model=list[UserRead])
-def list_users(db=Depends(get_db)):
+def list_users(db=Depends(get_db), _moderator=Depends(require_moderator)):
     # TODO: paginate
     db.execute("SELECT * FROM users;")
     return db.fetchall()
 
 
 @router.get("/{user_id}", response_model=UserRead)
-def get_user(user_id: uuid.UUID, db=Depends(get_db)):
+def get_user(
+    user_id: uuid.UUID, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    ensure_self_or_moderator(current_user, user_id)
     db.execute("SELECT * FROM users WHERE id = %s;", (str(user_id),))
     user = db.fetchone()
     if user is None:
@@ -50,7 +66,10 @@ def get_user(user_id: uuid.UUID, db=Depends(get_db)):
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user(user_id: uuid.UUID, db=Depends(get_db)):
+def delete_user(
+    user_id: uuid.UUID, db=Depends(get_db), current_user=Depends(get_current_user)
+):
+    ensure_self_or_moderator(current_user, user_id)
     db.execute("DELETE FROM users WHERE id = %s RETURNING id;", (str(user_id),))
     deleted = db.fetchone()
 
@@ -63,7 +82,17 @@ def delete_user(user_id: uuid.UUID, db=Depends(get_db)):
 
 
 @router.patch("/{user_id}", response_model=UserRead)
-def update_user(user_id: uuid.UUID, payload: UserUpdate, db=Depends(get_db)):
+def update_user(
+    user_id: uuid.UUID,
+    payload: UserUpdate,
+    db=Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    ensure_self_or_moderator(current_user, user_id)
+
+    is_moderator = current_user["status"] == "moderator"
+    is_self = str(current_user["id"]) == str(user_id)
+
     # Odrzucamy wszystkie pola, które nie zostały wprost przesłane przez użytkownika
     update_data = payload.model_dump(exclude_unset=True)
 
@@ -71,6 +100,19 @@ def update_user(user_id: uuid.UUID, payload: UserUpdate, db=Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No valid fields provided for update.",
+        )
+
+    if MODERATOR_ONLY_FIELDS & update_data.keys() and not is_moderator:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only a moderator can change status or blacklist.",
+        )
+
+    # Moderator na cudzym koncie może zmieniać wyłącznie status i blacklistę
+    if update_data.keys() - MODERATOR_ONLY_FIELDS and not is_self:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the user can change their own profile data.",
         )
 
     # Należy na nowo zahaszować hasło, jeśli zostało przesłane do zmiany
@@ -99,6 +141,11 @@ def update_user(user_id: uuid.UUID, payload: UserUpdate, db=Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="User with this email already exists.",
+        )
+    except errors.ForeignKeyViolation:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid user status.",
         )
 
     updated_user = db.fetchone()
