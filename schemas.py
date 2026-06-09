@@ -28,6 +28,14 @@ class UserUpdate(BaseModel):
     password: str | None = Field(default=None, min_length=8, max_length=72)
     first_name: str | None = Field(default=None, min_length=1)
     last_name: str | None = Field(default=None, min_length=1)
+    # Pola dostępne wyłącznie dla moderatora (walidacja w routerze)
+    status: str | None = Field(default=None, min_length=1)
+    blacklisted: bool | None = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 class EventStatus(str, Enum):
@@ -44,7 +52,6 @@ class EventCreate(BaseModel):
     status: EventStatus = EventStatus.szkic
     participant_limit: int
     social_media_links: str
-    created_by: uuid.UUID
 
 
 class EventRead(BaseModel):
