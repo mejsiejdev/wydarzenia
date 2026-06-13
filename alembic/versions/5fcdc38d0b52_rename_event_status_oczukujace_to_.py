@@ -5,14 +5,15 @@ Revises: dcd0733ad720
 Create Date: 2026-06-13 21:06:51.929993
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5fcdc38d0b52'
-down_revision: Union[str, Sequence[str], None] = 'dcd0733ad720'
+revision: str = "5fcdc38d0b52"
+down_revision: Union[str, Sequence[str], None] = "dcd0733ad720"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

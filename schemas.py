@@ -49,9 +49,17 @@ class EventCreate(BaseModel):
     title: str = Field(min_length=1)
     description: str
     public: bool
-    status: EventStatus = EventStatus.szkic
     participant_limit: int
     social_media_links: str
+
+
+class EventUpdate(BaseModel):
+    # Tylko pola treści; status zmienia się wyłącznie przez akcje submit/approve/reject
+    title: str | None = Field(default=None, min_length=1)
+    description: str | None = None
+    public: bool | None = None
+    participant_limit: int | None = None
+    social_media_links: str | None = None
 
 
 class EventRead(BaseModel):
