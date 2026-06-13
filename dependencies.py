@@ -1,7 +1,7 @@
 from collections.abc import Generator
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
@@ -89,3 +89,11 @@ def require_active_user(user=Depends(get_current_user)):
             detail="Account is not activated.",
         )
     return user
+
+
+def pagination_params(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> dict:
+    # Wspólna konwencja stronicowania dla wszystkich list (events, users, ...)
+    return {"limit": limit, "offset": offset}

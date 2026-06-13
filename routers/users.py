@@ -4,7 +4,12 @@ import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
 from psycopg2 import errors
 
-from dependencies import get_current_user, get_db, require_moderator
+from dependencies import (
+    get_current_user,
+    get_db,
+    pagination_params,
+    require_moderator,
+)
 from schemas import UserCreate, UserRead, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -44,9 +49,15 @@ def create_user(payload: UserCreate, db=Depends(get_db)):
 
 
 @router.get("", response_model=list[UserRead])
-def list_users(db=Depends(get_db), _moderator=Depends(require_moderator)):
-    # TODO: paginate
-    db.execute("SELECT * FROM users;")
+def list_users(
+    db=Depends(get_db),
+    _moderator=Depends(require_moderator),
+    page=Depends(pagination_params),
+):
+    db.execute(
+        "SELECT * FROM users ORDER BY created_at LIMIT %s OFFSET %s;",
+        (page["limit"], page["offset"]),
+    )
     return db.fetchall()
 
 
