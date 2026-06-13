@@ -64,3 +64,35 @@ class EventRead(BaseModel):
     social_media_links: str
     created_at: datetime
     created_by: uuid.UUID
+
+
+class LocationType(str, Enum):
+    pwr = "pwr"
+    wlasne = "wlasne"
+
+
+class LocationCreate(BaseModel):
+    name: str = Field(min_length=1, description="Nazwa potoczna, np. Sala Teatralna")
+    address_id: uuid.UUID
+    type: LocationType
+    capacity: int | None = None
+    is_active: bool = True
+
+class LocationRead(BaseModel):
+    id: uuid.UUID
+    name: str
+    address_id: uuid.UUID
+    type: LocationType
+    capacity: int | None
+    is_active: bool
+
+
+class EventBlacklistCreate(BaseModel):
+    event_id: uuid.UUID
+    user_id: uuid.UUID
+    reason: str = Field(min_length=1)
+
+class EventBlacklistRead(BaseModel):
+    event_id: uuid.UUID
+    user_id: uuid.UUID
+    reason: str
