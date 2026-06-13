@@ -40,7 +40,7 @@ class Token(BaseModel):
 
 class EventStatus(str, Enum):
     szkic = "szkic"
-    oczukujace_na_akceptacje = "oczukujace_na_akceptacje"
+    oczekujace_na_akceptacje = "oczekujace_na_akceptacje"
     zaakceptowane = "zaakceptowane"
     odrzucone = "odrzucone"
 
