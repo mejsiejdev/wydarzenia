@@ -25,7 +25,7 @@ def upgrade() -> None:
         ADD CONSTRAINT fk_event_registrations_occurrence_id
         FOREIGN KEY (occurrence_id) REFERENCES event_occurrences (id) ON DELETE CASCADE;
     """)
-    
+
     # Dodanie klucza obcego dla user_id
     op.execute("""
         ALTER TABLE event_registrations
@@ -40,7 +40,7 @@ def downgrade() -> None:
         ALTER TABLE event_registrations 
         DROP CONSTRAINT fk_event_registrations_user_id;
     """)
-    
+
     # Usunięcie klucza obcego dla occurrence_id
     op.execute("""
         ALTER TABLE event_registrations 

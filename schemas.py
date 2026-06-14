@@ -86,6 +86,7 @@ class LocationCreate(BaseModel):
     capacity: int | None = None
     is_active: bool = True
 
+
 class LocationRead(BaseModel):
     id: uuid.UUID
     name: str
@@ -99,6 +100,7 @@ class EventBlacklistCreate(BaseModel):
     event_id: uuid.UUID
     user_id: uuid.UUID
     reason: str = Field(min_length=1)
+
 
 class EventBlacklistRead(BaseModel):
     event_id: uuid.UUID

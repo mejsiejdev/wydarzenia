@@ -10,4 +10,3 @@ app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(locations.router)
 app.include_router(event_blacklists.router)
-
