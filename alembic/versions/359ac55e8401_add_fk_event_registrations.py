@@ -19,32 +19,30 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Ograniczenie klucza obcego dla occurrence_id
-    op.create_foreign_key(
-        "fk_event_registrations_occurrence_id",
-        "event_registrations",
-        "event_occurrences",
-        ["occurrence_id"],
-        ["id"],
-        ondelete="CASCADE",
-    )
-    # Ograniczenie klucza obcego dla user_id
-    op.create_foreign_key(
-        "fk_event_registrations_user_id",
-        "event_registrations",
-        "users",
-        ["user_id"],
-        ["id"],
-        ondelete="CASCADE",
-    )
+    # Dodanie klucza obcego dla occurrence_id
+    op.execute("""
+        ALTER TABLE event_registrations
+        ADD CONSTRAINT fk_event_registrations_occurrence_id
+        FOREIGN KEY (occurrence_id) REFERENCES event_occurrences (id) ON DELETE CASCADE;
+    """)
+    
+    # Dodanie klucza obcego dla user_id
+    op.execute("""
+        ALTER TABLE event_registrations
+        ADD CONSTRAINT fk_event_registrations_user_id
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE;
+    """)
 
 
 def downgrade() -> None:
-    op.drop_constraint(
-        "fk_event_registrations_user_id", "event_registrations", type_="foreignkey"
-    )
-    op.drop_constraint(
-        "fk_event_registrations_occurrence_id",
-        "event_registrations",
-        type_="foreignkey",
-    )
+    # Usunięcie klucza obcego dla user_id
+    op.execute("""
+        ALTER TABLE event_registrations 
+        DROP CONSTRAINT fk_event_registrations_user_id;
+    """)
+    
+    # Usunięcie klucza obcego dla occurrence_id
+    op.execute("""
+        ALTER TABLE event_registrations 
+        DROP CONSTRAINT fk_event_registrations_occurrence_id;
+    """)
