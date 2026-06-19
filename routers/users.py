@@ -81,7 +81,14 @@ def delete_user(
     user_id: uuid.UUID, db=Depends(get_db), current_user=Depends(get_current_user)
 ):
     ensure_self_or_moderator(current_user, user_id)
-    db.execute("DELETE FROM users WHERE id = %s RETURNING id;", (str(user_id),))
+    try:
+        db.execute("DELETE FROM users WHERE id = %s RETURNING id;", (str(user_id),))
+    except errors.ForeignKeyViolation:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete user: they still own events or have granted "
+            "event access. Reassign or remove those first.",
+        )
     deleted = db.fetchone()
 
     if deleted is None:
