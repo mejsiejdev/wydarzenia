@@ -96,6 +96,47 @@ class LocationRead(BaseModel):
     is_active: bool
 
 
+class OccurrenceStatus(str, Enum):
+    zaplanowane = "zaplanowane"
+    odwolane = "odwolane"
+    przesuniete = "przesuniete"
+
+
+class OccurrenceCreate(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    location_id: uuid.UUID
+
+
+class OccurrenceUpdate(BaseModel):
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    location_id: uuid.UUID | None = None
+
+
+class OccurrenceRead(BaseModel):
+    id: uuid.UUID
+    event_id: uuid.UUID
+    start_time: datetime
+    end_time: datetime
+    location_id: uuid.UUID
+    status: OccurrenceStatus
+
+
+class RegistrationStatus(str, Enum):
+    organizator = "organizator"
+    zapisany = "zapisany"
+    rezerwowy = "rezerwowy"
+    anulowany = "anulowany"
+
+
+class RegistrationRead(BaseModel):
+    occurrence_id: uuid.UUID
+    user_id: uuid.UUID
+    status: RegistrationStatus
+    registered_at: datetime
+
+
 class EventBlacklistCreate(BaseModel):
     event_id: uuid.UUID
     user_id: uuid.UUID

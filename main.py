@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 
 from config import settings
-from routers import auth, users, events, locations, event_blacklists
+from routers import (
+    auth,
+    users,
+    events,
+    locations,
+    event_blacklists,
+    occurrences,
+    registrations,
+)
 
 app = FastAPI(title=settings.app_name)
 
@@ -10,3 +18,5 @@ app.include_router(users.router)
 app.include_router(events.router)
 app.include_router(locations.router)
 app.include_router(event_blacklists.router)
+app.include_router(occurrences.router)
+app.include_router(registrations.router)
