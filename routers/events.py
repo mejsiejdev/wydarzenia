@@ -278,9 +278,7 @@ def delete_event(
         return db.fetchone()
 
     # Pełne usunięcie wydarzenia.
-    # event_access i event_occurrences są usuwane przez ON DELETE CASCADE.
-    # events_categories i event_blacklists mają FK bez CASCADE, więc czyścimy ręcznie.
-    db.execute("DELETE FROM events_categories WHERE event_id = %s;", (str(event_id),))
-    db.execute("DELETE FROM event_blacklists WHERE event_id = %s;", (str(event_id),))
+    # event_access, event_occurrences, events_categories i event_blacklists
+    # są usuwane przez ON DELETE CASCADE.
     db.execute("DELETE FROM events WHERE id = %s;", (str(event_id),))
     return Response(status_code=status.HTTP_204_NO_CONTENT)

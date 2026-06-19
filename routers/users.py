@@ -86,8 +86,9 @@ def delete_user(
     except errors.ForeignKeyViolation:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot delete user: they still own events or have granted "
-            "event access. Reassign or remove those first.",
+            detail="Cannot delete user: they still own events, have granted "
+            "event access, or have issued blacklist bans. Reassign or remove "
+            "those first.",
         )
     deleted = db.fetchone()
 
