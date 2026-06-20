@@ -104,6 +104,34 @@ The moderator can now list all users (`GET /users`) and manage other accounts
 via `PATCH /users/{id}` — e.g. activate one with `{"status": "zwykły"}` or
 block one with `{"blacklisted": true}`.
 
+## Testing
+
+The test suite is an end-to-end flow test that drives the real API with
+`fastapi.testclient.TestClient` against a real Postgres database. It needs a
+**separate, empty** database — never point it at your development data.
+
+1. Create the test database once, e.g.:
+
+   ```bash
+   psql create database wydarzenia_test
+   ```
+
+2. Set `TEST_DATABASE_URL` in `.env` (or your shell) to point at it:
+
+   ```bash
+   TEST_DATABASE_URL=postgresql://user:password@localhost:5432/wydarzenia_test
+   ```
+
+3. Run the tests:
+
+   ```bash
+   uv run pytest -v
+   ```
+
+The suite applies the alembic migrations to the test database on startup, and
+each test runs inside a transaction that is rolled back afterwards, so the
+database is left empty. If `TEST_DATABASE_URL` is unset, the tests are skipped.
+
 ## Migrations
 
 To create a migration, run:
