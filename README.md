@@ -1,11 +1,11 @@
 # Wydarzenia
 
-## Setting up the project locally
+## Uruchomienie projektu
 
-First, install [python](https://www.python.org/downloads/)
-and [uv](https://docs.astral.sh/uv/getting-started/installation/)
+Najpierw należy zainstalować [Python'a](https://www.python.org/downloads/)
+oraz [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
-Check if the `uv` is available:
+Następnie sprawdzić, czy `uv` jest dostępne:
 
 ```bash
 $ uv
@@ -16,70 +16,52 @@ Usage: uv [OPTIONS] <COMMAND>
 ...
 ```
 
-After ensuring it's available, install required packages.
+Po upewnieniu się, że jest dostępne, należy zainstalować wymagane pakiety.
 
 ```bash
 uv sync
 ```
 
-Next, set the DATABASE_URL in `.env` that points to your database,
-and a JWT_SECRET_KEY used to sign access tokens (any long random string,
-e.g. generated with `openssl rand -hex 32`).
+Następnie należy ustawić w pliku `.env` zmienną `DATABASE_URL` wskazującą na bazę
+danych oraz `JWT_SECRET_KEY` używaną do podpisywania tokenów dostępu (dowolny
+długi, losowy ciąg znaków, np. wygenerowany poleceniem `openssl rand -hex 32`).
 
 ```bash
 DATABASE_URL=postgresql://user:password@localhost:5432/database_name
-JWT_SECRET_KEY=<long random string>
+JWT_SECRET_KEY=<długi losowy ciąg znaków>
 ```
 
-Before running, apply the database migrations (see [Migrations](#migrations)):
+Przed uruchomieniem należy zastosować migracje bazy danych (zob. [Migracje](#migracje)):
 
 ```bash
 uv run alembic upgrade head
 ```
 
-Now you can run the project with uvicorn. For local development, use
-`--reload` for live reloading:
-
-```bash
-uv run uvicorn main:app --reload
-```
-
-The API is served at `http://127.0.0.1:8000`, with interactive docs at
-`http://127.0.0.1:8000/docs`.
-
-For a production-like server, drop `--reload`:
+Teraz można uruchomić projekt za pomocą uvicorn:
 
 ```bash
 uv run uvicorn main:app
 ```
 
-If you want to add a package, run:
+API jest dostępne pod adresem `http://127.0.0.1:8000`, a interaktywna
+dokumentacja pod `http://127.0.0.1:8000/docs`.
 
-```bash
-uv add <PACKAGE>
-```
+## Uwierzytelnianie
 
-For example:
+Logowanie odbywa się przez `POST /auth/login` (formularz hasłowy OAuth2, pole
+`username` przenosi adres e-mail) i zwraca token JWT typu bearer, który następnie
+należy przesyłać w nagłówku `Authorization: Bearer <token>`. W interaktywnej
+dokumentacji służy do tego przycisk **Authorize**.
 
-```bash
-uv add ruff
-```
+Nowe konta otrzymują status `nieaktywowany`: mogą się logować i przeglądać
+zawartość, ale nie mogą tworzyć wydarzeń. Tylko moderator może zmienić użytkownikowi
+pole `status` lub flagę `blacklisted` (przez `PATCH /users/{id}`). dlatego
+pierwszego moderatora trzeba skonfigurować ręcznie:
 
-## Authentication
+### Konfiguracja pierwszego moderatora
 
-Log in via `POST /auth/login` (OAuth2 password form, `username` carries the
-email) to get a JWT bearer token, then send it as `Authorization: Bearer <token>`.
-In the interactive docs, use the **Authorize** button.
-
-New accounts start with the `nieaktywowany` status: they can log in and browse,
-but cannot create events. Only a moderator can change a user's `status` or
-`blacklisted` flag (via `PATCH /users/{id}`) — so the first moderator has to be
-bootstrapped by hand:
-
-### Setting up the first moderator
-
-1. Register a user through the API — either in the interactive docs
-   (`POST /users` at `http://127.0.0.1:8000/docs`) or with curl:
+1. Należy zarejestrować użytkownika przez API albo w interaktywnej dokumentacji
+   (`POST /users` pod `http://127.0.0.1:8000/docs`), albo za pomocą curl:
 
    ```bash
    curl -X POST http://127.0.0.1:8000/users \
@@ -87,61 +69,64 @@ bootstrapped by hand:
      -d '{"email": "admin@example.com", "password": "password123", "first_name": "Admin", "last_name": "User"}'
    ```
 
-2. Promote that account directly in the database, using the same connection
-   string as `DATABASE_URL` in your `.env`:
+2. Następnie należy nadać temu kontu uprawnienia bezpośrednio w bazie danych,
+   używając tego samego connection stringa co `DATABASE_URL` w pliku `.env`:
 
    ```bash
    psql "postgresql://user:password@localhost:5432/database_name" \
      -c "UPDATE users SET status = 'moderator' WHERE email = 'admin@example.com';"
    ```
 
-3. Log in as that user — in the interactive docs click **Authorize** and enter
-   the email as `username` plus your password. If the user was already logged
-   in before the promotion, no re-login is needed: the status is read fresh
-   from the database on every request.
+3. Należy zalogować się jako użytkownik z nowo dodanymi uprawnieniami. W interaktywnej dokumentacji wystarczy
+   kliknąć **Authorize** i podać adres e-mail jako `username` oraz hasło. Jeśli
+   użytkownik był już zalogowany przed nadaniem uprawnień, ponowne logowanie nie
+   jest konieczne: status jest odczytywany na świeżo z bazy danych przy każdym
+   żądaniu.
 
-The moderator can now list all users (`GET /users`) and manage other accounts
-via `PATCH /users/{id}` — e.g. activate one with `{"status": "zwykły"}` or
-block one with `{"blacklisted": true}`.
+Moderator może teraz wylistować wszystkich użytkowników (`GET /users`) oraz
+zarządzać innymi kontami przez `PATCH /users/{id}`, np. aktywować konto za pomocą
+`{"status": "zwykły"}` lub zablokować je za pomocą `{"blacklisted": true}`.
 
-## Testing
+## Testowanie
 
-The test suite is an end-to-end flow test that drives the real API with
-`fastapi.testclient.TestClient` against a real Postgres database. It needs a
-**separate, empty** database — never point it at your development data.
+Zestaw testów to test przepływu end-to-end, który steruje prawdziwym API za pomocą
+`fastapi.testclient.TestClient` na rzeczywistej bazie danych Postgres. Wymaga on
+**osobnej, pustej** bazy danych, nigdy nie należy kierować go na używane dane.
 
-1. Create the test database once, e.g.:
+1. Bazę testową tworzy się raz, np.:
 
    ```bash
-   psql create database wydarzenia_test
+   createdb wydarzenia_test
    ```
 
-2. Set `TEST_DATABASE_URL` in `.env` (or your shell) to point at it:
+2. Należy ustawić `TEST_DATABASE_URL` w pliku `.env` (lub w powłoce) tak, aby
+   wskazywała na tę bazę:
 
    ```bash
    TEST_DATABASE_URL=postgresql://user:password@localhost:5432/wydarzenia_test
    ```
 
-3. Run the tests:
+3. Uruchomienie testów:
 
    ```bash
    uv run pytest -v
    ```
 
-The suite applies the alembic migrations to the test database on startup, and
-each test runs inside a transaction that is rolled back afterwards, so the
-database is left empty. If `TEST_DATABASE_URL` is unset, the tests are skipped.
+Zestaw testów stosuje migracje alembica na bazie testowej przy starcie, a każdy
+test wykonuje się wewnątrz transakcji, która jest następnie wycofywana, dzięki
+czemu baza pozostaje pusta. Jeśli `TEST_DATABASE_URL` nie jest ustawiona, testy
+są pomijane.
 
-## Migrations
+## Migracje
 
-To create a migration, run:
+Aby utworzyć migrację, należy uruchomić:
 
 ```bash
-alembic revision -m "<REVISION_NAME>"
+uv run alembic revision -m "<NAZWA_REWIZJI>"
 ```
 
-After adding the migration content, apply the changes from it:
+Po dodaniu zawartości migracji należy zastosować wprowadzone w niej zmiany:
 
 ```bash
-alembic upgrade head
+uv run alembic upgrade head
 ```
