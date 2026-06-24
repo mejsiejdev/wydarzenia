@@ -5,7 +5,7 @@
 Najpierw należy zainstalować [Python'a](https://www.python.org/downloads/)
 oraz [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
-Następnie sprawdzić, czy `uv` jest dostępne:
+Następnie trzeba sprawdzić, czy `uv` jest dostępne:
 
 ```bash
 $ uv
